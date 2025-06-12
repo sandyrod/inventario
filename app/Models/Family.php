@@ -7,4 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Family extends Model
 {
     protected $fillable = ['familycode','familyname','UA','matrix'];
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
 }

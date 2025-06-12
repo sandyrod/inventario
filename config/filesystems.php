@@ -77,4 +77,10 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+    'imports' => [
+        'driver' => 'local',
+        'root' => storage_path('app/public/imports'),
+        'throw' => false,
+    ],
+
 ];

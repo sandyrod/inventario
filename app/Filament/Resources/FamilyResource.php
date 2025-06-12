@@ -2,40 +2,113 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\FamilyResource\Pages;
+use App\Filament\Resources\FamilyResource\RelationManagers;
+use App\Models\Family;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Forms\Components\FileUpload;
+use Filament\Tables;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ImportProductResource extends Resource
+class FamilyResource extends Resource
 {
-    protected static ?string $model = null;
-    protected static ?string $navigationIcon = 'heroicon-o-document-arrow-up';
-    protected static ?string $navigationLabel = 'Importar Productos';
-    protected static ?string $navigationGroup = 'Inventario';
+    protected static ?string $model = Family::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Familia'; // Singular
+    protected static ?string $pluralModelLabel = 'Familias'; // Plural
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                FileUpload::make('file')
-                    ->label('Archivo Excel')
+                Forms\Components\TextInput::make('familycode')
+                    ->label('Codigo')
                     ->required()
-                    ->acceptedFileTypes([
-                        'application/vnd.ms-excel',
-                        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('familyname')
+                    ->label('Familia')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Select::make('UA')
+                    ->label('UA')
+                    ->required()
+                    ->options([
+                        'Si' => 'Si',
+                        'No' => 'No',
                     ])
-                    ->maxSize(1024)
-                    ->directory('imports')
-                    ->preserveFilenames()
-                    ->visibility('private'),
+                    ->default('Si') // Valor por defecto
+                    ->native(false),
+                Forms\Components\Select::make('matrix')
+                    ->label('Matriz')
+                    ->required()
+                    ->options([
+                        'Si' => 'Si',
+                        'No' => 'No',
+                    ])
+                    ->default('No') // Valor por defecto
+                    ->native(false),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('familycode')
+                    ->label('Codigo')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('familyname')
+                    ->label('Familia')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('UA')
+                    ->label('UA')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('matrix')
+                    ->label('Matriz')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('deleted_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->statePath('data');
+            ->filters([
+                //
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ManageImportProducts::route('/'),
+            'index' => Pages\ListFamilies::route('/'),
+            'create' => Pages\CreateFamily::route('/create'),
+            'edit' => Pages\EditFamily::route('/{record}/edit'),
         ];
     }
 }

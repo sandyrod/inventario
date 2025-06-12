@@ -6,5 +6,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['reference','description','family_id','brand_id','unit_id'];
+    protected $fillable = ['productcode','reference','description','family_id','brand_id','unit_id', 'cost', 'price', 'stock', 'stockmin'];
+
+    public function family()
+    {
+        return $this->belongsTo(Family::class);
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
 }
