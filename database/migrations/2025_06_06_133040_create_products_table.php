@@ -22,7 +22,7 @@ return new class extends Migration
             $table->float('cost');
             $table->float('price');
             $table->integer('stock')->default(0);
-            $table->integer('stonkmin')->default(0);
+            $table->integer('stockmin')->default(0);
             $table->foreign('family_id')->references('id')->on('families')->onDelete('cascade');
             $table->foreign('brand_id')->references('id')->on('brands')->onDelete('cascade');
             $table->foreign('unit_id')->references('id')->on('units')->onDelete('cascade');

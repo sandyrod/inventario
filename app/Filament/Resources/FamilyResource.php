@@ -70,6 +70,9 @@ class FamilyResource extends Resource
                 Tables\Columns\TextColumn::make('matrix')
                     ->label('Matriz')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('stockmin')
+                    ->label('Stock Minimo')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('deleted_at')
                     ->dateTime()
                     ->sortable()

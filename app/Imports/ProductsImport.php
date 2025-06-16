@@ -39,46 +39,59 @@ class InventorySheetImport implements ToCollection, WithStartRow, WithCalculated
                     continue; // Saltar filas completamente vacías
                 }
 
-                $familyId = null;
-                $brandId = null;
+                // $familyId = null;
+                // $brandId = null;
+                // $familyStockmin = 0;
 
-                // 1. Procesar Familia (si existe dato en columna D)
-                if (!empty($row[3])) {
-                    $familyCode = $this->getCalculatedValue($row[3]);
-                    $familyName = $this->getCalculatedValue($row[4] ?? null);
-                    $uaValue = $this->getCalculatedValue($row[5] ?? null) ?? 'Si';
-                    $matrixValue = $this->getCalculatedValue($row[6] ?? null) ?? 'No';
+                // // 1. Procesar Familia (si existe dato en columna D)
+                // if (!empty($row[3])) {
+                //     $familyCode = $this->getCalculatedValue($row[3]);
+                //     $familyName = $this->getCalculatedValue($row[4] ?? null);
+                //     $uaValue = $this->getCalculatedValue($row[5] ?? null) ?? 'Si';
+                //     $matrixValue = $this->getCalculatedValue($row[6] ?? null) ?? 'No';
+                //     $stockmin = $this->parseNumber($row[7] ?? 0);
 
-                    if (!empty($familyCode)) {
-                        $family = Family::updateOrCreate(
-                            ['familycode' => $familyCode],
-                            [
-                                'familyname' => $familyName ?? 'Sin nombre',
-                                'UA' => strtoupper($uaValue) === 'SI' ? 'Si' : 'No',
-                                'matrix' => strtoupper($matrixValue) === 'SI' ? 'Si' : 'No',
-                                'active' => true
-                            ]
-                        );
-                        $familyId = $family->id;
-                    }
-                }
+                //     if (!empty($familyCode)) {
+                //         $family = Family::updateOrCreate(
+                //             ['familycode' => $familyCode],
+                //             [
+                //                 'familyname' => $familyName ?? 'Sin nombre',
+                //                 'UA' => strtoupper($uaValue) === 'SI' ? 'Si' : 'No',
+                //                 'matrix' => strtoupper($matrixValue) === 'SI' ? 'Si' : 'No',
+                //                 'stockmin' => $stockmin
+                //             ]
+                //         );
+                //         $familyId = $family->id;
+                //         $familyStockmin = $stockmin;
+                //     }
+                // }
 
-                // 2. Procesar Marca (si existe dato en columna G)
-                if (!empty($row[6])) {
-                    $brandCode = $this->getCalculatedValue($row[6]);
-                    $brandName = $this->getCalculatedValue($row[7] ?? null);
+                // // 2. Procesar Marca (si existe dato en columna G)
+                // if (!empty($row[6])) {
+                //     $brandCode = $this->getCalculatedValue($row[6]);
+                //     $brandName = $this->getCalculatedValue($row[7] ?? null);
 
-                    if (!empty($brandCode)) {
-                        $brand = Brand::updateOrCreate(
-                            ['code' => $brandCode],
-                            ['description' => $brandName ?? 'Sin nombre']
-                        );
-                        $brandId = $brand->id;
-                    }
-                }
+                //     if (!empty($brandCode)) {
+                //         $brand = Brand::updateOrCreate(
+                //             ['code' => $brandCode],
+                //             ['description' => $brandName ?? 'Sin nombre']
+                //         );
+                //         $brandId = $brand->id;
+                //     }
+                // }
 
                 // 3. Procesar Producto (si existe dato en columna A)
                 if (!empty($row[0])) {
+                    $Family = Family::where('familycode',$this->getCalculatedValue($row[3] ?? null))->first();
+                    $familyId = $Family->id;
+                    $familyStockmin = $Family->stockmin;
+                    $Brand = Brand::where('code',$this->getCalculatedValue($row[6] ?? null))->first();
+                    $brandId = $Brand->id;
+                    logger()->info("familia", [
+                        'familia id: ' => $familyId,
+                        'stockmin' => $Family->stockmin,
+                        'familia' => $Family
+                    ]);
                     $productData = [
                         'reference' => $this->getCalculatedValue($row[1] ?? null),
                         'description' => $this->getCalculatedValue($row[2] ?? null),
@@ -88,7 +101,7 @@ class InventorySheetImport implements ToCollection, WithStartRow, WithCalculated
                         'cost' => $this->parseNumber($row[8] ?? 0),
                         'price' => $this->parseNumber($row[9] ?? 0),
                         'stock' => $this->parseNumber($row[10] ?? 0),
-                        'stonkmin' => 0
+                        'stockmin' => $familyStockmin
                     ];
 
                     Product::updateOrCreate(
@@ -142,9 +155,9 @@ class FamiliesSheetImport implements ToCollection, WithStartRow, WithCalculatedF
 
                 $code = $this->getCalculatedValue($row[0]);
                 $name = $this->getCalculatedValue($row[1] ?? null);
-                $active = isset($row[2]) ? strtoupper($this->getCalculatedValue($row[2])) === 'SI' : 'Si';
-                $matrix = isset($row[3]) ? strtoupper($this->getCalculatedValue($row[3])) === 'SI' : 'No';
-                $ua = isset($row[4]) ? strtoupper($this->getCalculatedValue($row[4])) === 'SI' ? 'Si' : 'No' : 'Si';
+                $ua = strtoupper($this->getCalculatedValue($row[2]));
+                $matrix = trim(strtoupper($this->getCalculatedValue($row[3]))) == '' ? 'NO' : 'SI';
+                $stockmin = $this->parseNumber($row[4] ?? 0);
 
                 if (empty($code)) {
                     continue;
@@ -154,9 +167,9 @@ class FamiliesSheetImport implements ToCollection, WithStartRow, WithCalculatedF
                     ['familycode' => $code],
                     [
                         'familyname' => $name ?? 'Sin nombre',
-                        'active' => $active,
-                        'matrix' => $matrix == 1 ? 'Si' : 'No',
-                        'UA' => $ua
+                        'UA' => $ua,
+                        'matrix' => $matrix,
+                        'stockmin' => $stockmin
                     ]
                 );
 
@@ -173,6 +186,11 @@ class FamiliesSheetImport implements ToCollection, WithStartRow, WithCalculatedF
             return $cell->getCalculatedValue();
         }
         return $cell;
+    }
+    protected function parseNumber($value)
+    {
+        $value = $this->getCalculatedValue($value);
+        return is_numeric($value) ? $value : 0;
     }
 }
 

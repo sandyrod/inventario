@@ -73,7 +73,7 @@ class ProductResource extends Resource
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('stonkmin')
+                Forms\Components\TextInput::make('stockmin')
                     ->label('Stock Minimo')
                     ->required()
                     ->numeric()
@@ -125,7 +125,7 @@ class ProductResource extends Resource
                     ->label('Stock')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('stonkmin')
+                Tables\Columns\TextColumn::make('stockmin')
                     ->label('Stock Minimo')
                     ->numeric()
                     ->sortable(),
