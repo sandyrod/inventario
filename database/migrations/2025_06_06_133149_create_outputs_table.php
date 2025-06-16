@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('outputs', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->float('amount');
+            $table->enum('type', ['venta', 'deterioro', 'ajuste'])->default('venta');
+            $table->text('description')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

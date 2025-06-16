@@ -13,7 +13,10 @@ return new class extends Migration
     {
         Schema::create('inputs', function (Blueprint $table) {
             $table->id();
-            
+            $table->unsignedBigInteger('user_id');
+            $table->float('amount');
+            $table->enum('type', ['compra', 'ajuste', 'devolucion'])->default('compra');
+            $table->text('description')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
