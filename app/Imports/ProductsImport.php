@@ -5,6 +5,8 @@ namespace App\Imports;
 use App\Models\Brand;
 use App\Models\Family;
 use App\Models\Product;
+use App\Models\Client;
+use App\Models\Provider;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
@@ -19,6 +21,8 @@ class ProductsImport implements WithMultipleSheets, WithCalculatedFormulas
             'TInventario' => new InventorySheetImport(),
             'FAMILIAS' => new FamiliesSheetImport(),
             'MARCAS' => new BrandsSheetImport(),
+            'CLIENTES' => new ClientsSheetImport(),
+            'PROVEEDORES' => new ProvidersSheetImport(),
         ];
     }
 }
@@ -39,46 +43,7 @@ class InventorySheetImport implements ToCollection, WithStartRow, WithCalculated
                     continue; // Saltar filas completamente vacías
                 }
 
-                // $familyId = null;
-                // $brandId = null;
-                // $familyStockmin = 0;
-
-                // // 1. Procesar Familia (si existe dato en columna D)
-                // if (!empty($row[3])) {
-                //     $familyCode = $this->getCalculatedValue($row[3]);
-                //     $familyName = $this->getCalculatedValue($row[4] ?? null);
-                //     $uaValue = $this->getCalculatedValue($row[5] ?? null) ?? 'Si';
-                //     $matrixValue = $this->getCalculatedValue($row[6] ?? null) ?? 'No';
-                //     $stockmin = $this->parseNumber($row[7] ?? 0);
-
-                //     if (!empty($familyCode)) {
-                //         $family = Family::updateOrCreate(
-                //             ['familycode' => $familyCode],
-                //             [
-                //                 'familyname' => $familyName ?? 'Sin nombre',
-                //                 'UA' => strtoupper($uaValue) === 'SI' ? 'Si' : 'No',
-                //                 'matrix' => strtoupper($matrixValue) === 'SI' ? 'Si' : 'No',
-                //                 'stockmin' => $stockmin
-                //             ]
-                //         );
-                //         $familyId = $family->id;
-                //         $familyStockmin = $stockmin;
-                //     }
-                // }
-
-                // // 2. Procesar Marca (si existe dato en columna G)
-                // if (!empty($row[6])) {
-                //     $brandCode = $this->getCalculatedValue($row[6]);
-                //     $brandName = $this->getCalculatedValue($row[7] ?? null);
-
-                //     if (!empty($brandCode)) {
-                //         $brand = Brand::updateOrCreate(
-                //             ['code' => $brandCode],
-                //             ['description' => $brandName ?? 'Sin nombre']
-                //         );
-                //         $brandId = $brand->id;
-                //     }
-                // }
+                
 
                 // 3. Procesar Producto (si existe dato en columna A)
                 if (!empty($row[0])) {
@@ -109,11 +74,11 @@ class InventorySheetImport implements ToCollection, WithStartRow, WithCalculated
                         $productData
                     );
 
-                    logger()->info("Producto procesado", [
-                        'fila' => $rowIndex + 2, // +2 porque startRow es 2
-                        'codigo' => $this->getCalculatedValue($row[0]),
-                        'data' => $productData
-                    ]);
+                    // logger()->info("Producto procesado", [
+                    //     'fila' => $rowIndex + 2, // +2 porque startRow es 2
+                    //     'codigo' => $this->getCalculatedValue($row[0]),
+                    //     'data' => $productData
+                    // ]);
                 }
 
             } catch (\Exception $e) {
@@ -229,7 +194,123 @@ class BrandsSheetImport implements ToCollection, WithStartRow, WithCalculatedFor
                 );
 
             } catch (\Exception $e) {
-                logger()->error("Error procesando marca (Fila: ".$row->getIndex()."): ".$e->getMessage());
+                logger()->error("Error procesando marca : ".$e->getMessage());
+                continue;
+            }
+        }
+    }
+
+    protected function getCalculatedValue($cell)
+    {
+        if (is_object($cell) && method_exists($cell, 'getCalculatedValue')) {
+            return $cell->getCalculatedValue();
+        }
+        return $cell;
+    }
+}
+
+class ClientsSheetImport implements ToCollection, WithStartRow, WithCalculatedFormulas
+{
+    public function startRow(): int
+    {
+        return 2; // Primera fila es encabezado, datos empiezan en fila 2
+    }
+
+    public function collection(Collection $rows)
+    {
+        foreach ($rows as $row) {
+            try {
+                // Validación básica - verifica que tenga código
+                if (empty($row[0])) {
+                    continue;
+                }
+                 logger()->info("Producto procesado", [
+                         'codigo' => $this->getCalculatedValue($row[0]),
+                     ]);
+                // Obtener valores calculados
+                $clientCode = $this->getCalculatedValue($row[0]);
+                $clientName = $this->getCalculatedValue($row[1] ?? null);
+                $clientAddress = $this->getCalculatedValue($row[2] ?? null);
+                $clientPhone = $this->getCalculatedValue($row[3] ?? null);
+                $clientEmail = $this->getCalculatedValue($row[4] ?? null);
+
+                // Validar que el código no sea nulo
+                if (empty($clientCode)) {
+                    continue;
+                }
+
+                // Buscar o crear la marca
+                Client::updateOrCreate(
+                    ['code' => $clientCode], // Campo de búsqueda
+                    [ // Datos a actualizar/crear
+                        'name' => $clientName ?? 'Sin nombre',
+                        'address' => $clientAddress ,
+                        'phone' => $clientPhone,
+                        'email' =>  $clientEmail,
+                        
+                    ]
+                );
+
+            } catch (\Exception $e) {
+                logger()->error("Error procesando Cliente: ".$e->getMessage());
+                continue;
+            }
+        }
+    }
+
+    protected function getCalculatedValue($cell)
+    {
+        if (is_object($cell) && method_exists($cell, 'getCalculatedValue')) {
+            return $cell->getCalculatedValue();
+        }
+        return $cell;
+    }
+}
+
+class ProvidersSheetImport implements ToCollection, WithStartRow, WithCalculatedFormulas
+{
+    public function startRow(): int
+    {
+        return 2; // Primera fila es encabezado, datos empiezan en fila 2
+    }
+
+    public function collection(Collection $rows)
+    {
+        foreach ($rows as $row) {
+            try {
+                // Validación básica - verifica que tenga código
+                if (empty($row[0])) {
+                    continue;
+                }
+                 logger()->info("Producto procesado", [
+                         'codigo' => $this->getCalculatedValue($row[0]),
+                     ]);
+                // Obtener valores calculados
+                $clientCode = $this->getCalculatedValue($row[0]);
+                $clientName = $this->getCalculatedValue($row[1] ?? null);
+                $clientAddress = $this->getCalculatedValue($row[2] ?? null);
+                $clientPhone = $this->getCalculatedValue($row[3] ?? null);
+                $clientEmail = $this->getCalculatedValue($row[4] ?? null);
+
+                // Validar que el código no sea nulo
+                if (empty($clientCode)) {
+                    continue;
+                }
+
+                // Buscar o crear la marca
+                Provider::updateOrCreate(
+                    ['code' => $clientCode], // Campo de búsqueda
+                    [ // Datos a actualizar/crear
+                        'name' => $clientName ?? 'Sin nombre',
+                        'address' => $clientAddress ,
+                        'phone' => $clientPhone,
+                        'email' =>  $clientEmail,
+                        
+                    ]
+                );
+
+            } catch (\Exception $e) {
+                logger()->error("Error procesando Proveedor: ".$e->getMessage());
                 continue;
             }
         }
