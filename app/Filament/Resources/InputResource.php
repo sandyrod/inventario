@@ -39,6 +39,12 @@ class InputResource extends Resource
                         'transferencia' => 'Transferencia',
                     ])
                     ->required(),
+                Forms\Components\Select::make('provider_id')
+                    ->label('Proveedor')
+                    ->relationship('provider', 'name') // Asume que 'nombre' es el campo que quieres mostrar
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                     
                 Forms\Components\Textarea::make('description')
                     ->label('Nota')
