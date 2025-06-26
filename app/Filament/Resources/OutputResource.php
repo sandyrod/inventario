@@ -39,7 +39,12 @@ class OutputResource extends Resource
                         'ajuste' => 'Ajuste',
                     ])
                     ->required(),
-                    
+                Forms\Components\Select::make('client_id')
+                    ->label('Cliente')
+                    ->relationship('client', 'name') // Asume que 'nombre' es el campo que quieres mostrar
+                    ->searchable()
+                    ->preload()
+                    ->required(),
                 Forms\Components\Textarea::make('description')
                     ->label('Nota')
                     ->columnSpanFull(),
