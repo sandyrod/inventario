@@ -63,22 +63,30 @@ class InputResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('product_id')
                             ->label('Producto')
-                            ->options(\App\Models\Product::all()->pluck('description', 'id'))
+                            ->options(\App\Models\Product::all()->mapWithKeys(fn ($item) => [
+                                $item->id => "{$item->productcode} - {$item->description}"
+                            ]))
                             ->searchable()
                             ->getSearchResultsUsing(fn (string $search) => 
                                 \App\Models\Product::where('productcode', 'like', "%{$search}%")
                                     ->orWhere('reference', 'like', "%{$search}%")
                                     ->orWhere('description', 'like', "%{$search}%")
                                     ->limit(50)
-                                    ->pluck('description', 'id'))
-                            ->getOptionLabelUsing(fn ($value) => \App\Models\Product::find($value)?->description)
+                                    ->get()
+                                    ->mapWithKeys(fn ($item) => [
+                                        $item->id => "{$item->productcode} - {$item->description}"
+                                    ]))
+                            ->getOptionLabelUsing(fn ($value) => 
+                                ($product = \App\Models\Product::find($value)) 
+                                    ? "{$product->productcode} - {$product->description}" 
+                                    : null)
                             ->required()
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 $product = \App\Models\Product::find($state);
                                 if ($product) {
                                     $set('unit_price', $product->price);
-                                    $set('total_price', round(1 * $product->price, 2)); // Actualiza el total al cambiar producto
+                                    $set('total_price', round(1 * $product->price, 2));
                                 }
                             }),
                             
@@ -133,6 +141,7 @@ class InputResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Usuario'),
                 Tables\Columns\TextColumn::make('type')
+                    ->label('Tipo')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'compra' => 'Compra',
@@ -140,6 +149,7 @@ class InputResource extends Resource
                         'transferencia' => 'Transferencia',
                     }),
                 Tables\Columns\TextColumn::make('description')
+                    ->label('Descripción')
                     ->limit(50),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime(),

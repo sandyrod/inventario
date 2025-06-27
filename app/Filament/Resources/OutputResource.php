@@ -62,15 +62,23 @@ class OutputResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('product_id')
                             ->label('Producto')
-                            ->options(\App\Models\Product::all()->pluck('description', 'id'))
+                            ->options(\App\Models\Product::all()->mapWithKeys(fn ($item) => [
+                                $item->id => "{$item->productcode} - {$item->description}"
+                            ]))
                             ->searchable()
                             ->getSearchResultsUsing(fn (string $search) => 
                                 \App\Models\Product::where('productcode', 'like', "%{$search}%")
                                     ->orWhere('reference', 'like', "%{$search}%")
                                     ->orWhere('description', 'like', "%{$search}%")
                                     ->limit(50)
-                                    ->pluck('description', 'id'))
-                            ->getOptionLabelUsing(fn ($value) => \App\Models\Product::find($value)?->description)
+                                    ->get()
+                                    ->mapWithKeys(fn ($item) => [
+                                        $item->id => "{$item->productcode} - {$item->description}"
+                                    ]))
+                            ->getOptionLabelUsing(fn ($value) => 
+                                ($product = \App\Models\Product::find($value)) 
+                                    ? "{$product->productcode} - {$product->description}" 
+                                    : null)
                             ->required()
                             ->live()
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
