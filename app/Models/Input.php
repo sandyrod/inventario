@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Input extends Model
 {
-    protected $fillable = ['user_id','amount','type','description'];
+    protected $fillable = ['user_id','amount','type','description','dateinput','datepaid','statuspaid'];
 
     public function items()
     {

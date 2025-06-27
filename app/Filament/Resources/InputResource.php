@@ -45,7 +45,29 @@ class InputResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
-                    
+                Forms\Components\DatePicker::make('dateinput')
+                    ->label('Fecha de nota')
+                    ->default(now()->toDateString())
+                    ->required()
+                    ->native(false)
+                    ->displayFormat('d/m/Y'),
+                
+                Forms\Components\DatePicker::make('datepaid')
+                    ->label('Fecha de pago')
+                    ->nullable()
+                    ->native(false)
+                    ->displayFormat('d/m/Y'),
+                
+                Forms\Components\Select::make('statuspaid')
+                    ->label('Estado de pago')
+                    ->options([
+                        'pendiente' => 'Pendiente',
+                        'pagado' => 'Pagado',
+                    ])
+                    ->default('pendiente')
+                    ->required()
+                    ->native(false),
+
                 Forms\Components\Textarea::make('description')
                     ->label('Nota')
                     ->columnSpanFull(),
