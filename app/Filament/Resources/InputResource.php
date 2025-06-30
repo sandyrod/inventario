@@ -46,7 +46,7 @@ class InputResource extends Resource
                     ->preload()
                     ->required(),
                 Forms\Components\DatePicker::make('dateinput')
-                    ->label('Fecha de nota')
+                    ->label('Fecha del Compra o entrada')
                     ->default(now()->toDateString())
                     ->required()
                     ->native(false)

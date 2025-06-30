@@ -36,7 +36,6 @@ class ClientResource extends Resource
                 Forms\Components\TextInput::make('phone')
                     ->label('Teléfono')
                     ->tel()
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\Textarea::make('address')
                     ->label('Dirección')
@@ -44,7 +43,6 @@ class ClientResource extends Resource
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('email')
                     ->label('Email')
-                    ->required()
                     ->columnSpanFull(),
             ]);
     }
