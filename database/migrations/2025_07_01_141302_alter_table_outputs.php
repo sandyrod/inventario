@@ -12,9 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('outputs', function (Blueprint $table) {
-            $table->unsignedBigInteger('client_id')
+            $table->unsignedBigInteger('paymentterm_id')
                   ->default(1)
-                  ->after('user_id'); // Colócalo después del campo que prefieras
+                  ->after('description');
+            $table->unsignedBigInteger('paymentform_id')
+                  ->default(1)
+                  ->after('paymentterm_id');
+            $table->unsignedBigInteger('status_id')
+                  ->default(1)
+                  ->after('paymentform_id');
         });
     }
 
@@ -24,7 +30,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('outputs', function (Blueprint $table) {
-            $table->dropColumn('client_id');
+            $table->dropColumn('paymentterm_id','paymentform_id', 'status_id');
         });
     }
 };

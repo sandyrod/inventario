@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\OutputResource\Pages;
 use App\Filament\Resources\OutputResource\RelationManagers;
 use App\Models\Output;
+use App\Models\Client;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -41,7 +42,30 @@ class OutputResource extends Resource
                     ->required(),
                 Forms\Components\Select::make('client_id')
                     ->label('Cliente')
-                    ->relationship('client', 'name') // Asume que 'nombre' es el campo que quieres mostrar
+                    ->options(\App\Models\Client::all()->mapWithKeys(fn ($item) => [
+                                $item->id => "{$item->name} ({$item->code})"
+                            ]))
+                    ->getOptionLabelUsing(fn ($value) => Client::find($value)?->name . ' (' . Client::find($value)?->code . ')')
+                    ->searchable()
+                    ->getSearchResultsUsing(fn (string $search) => 
+                        Client::where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%")
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(fn ($client) => [
+                                $client->id => $client->name . ' (' . $client->code . ')'
+                            ]))
+                    ->preload()
+                    ->required(),
+                Forms\Components\Select::make('paymentterm_id')
+                    ->label('Condicion de Pago')
+                    ->relationship('paymentterm', 'name') // Asume que 'nombre' es el campo que quieres mostrar
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+                Forms\Components\Select::make('paymentform_id')
+                    ->label('Forma de Pago')
+                    ->relationship('paymentform', 'name') // Asume que 'nombre' es el campo que quieres mostrar
                     ->searchable()
                     ->preload()
                     ->required(),
@@ -94,7 +118,14 @@ class OutputResource extends Resource
                             ->numeric()
                             ->required()
                             ->default(1)
+                            ->step(0.01)
                             ->live()
+                            ->formatStateUsing(function ($state) {
+                                // Muestra enteros sin decimales y decimales con 2 dígitos
+                                return is_int($state) || $state == floor($state) 
+                                    ? number_format($state, 0)
+                                    : number_format($state, 2);
+                            })
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $set('total_price', round($state * $get('unit_price'), 2));
                             }),

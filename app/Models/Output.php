@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Output extends Model
 {
-    protected $fillable = ['user_id','amount','type','description'];
+    protected $fillable = ['user_id', 'amount', 'type', 'description', 'paymentterm_id', 'paymentform_id', 'status_id'];
 
     public function items()
     {
@@ -22,5 +22,15 @@ class Output extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function paymentterm()
+    {
+        return $this->belongsTo(Paymentterm::class, 'paymentterm_id');
+    }
+
+    public function paymentform()
+    {
+        return $this->belongsTo(Paymentform::class, 'paymentform_id');
     }
 }

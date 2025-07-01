@@ -101,9 +101,13 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('reference')
                     ->label('Referencia')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('description')
+                    ->label('Descripción')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('family.familyname')
                     ->label('Familia')
                     ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('brand.description')
                     ->label('Marca')
@@ -112,6 +116,7 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('unit.unitname')
                     ->label('Unidad')
                     ->numeric()
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cost')
                     ->label('Costo')

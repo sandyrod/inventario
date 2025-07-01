@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('outputs', function (Blueprint $table) {
-            $table->unsignedBigInteger('client_id')
-                  ->default(1)
-                  ->after('user_id'); // Colócalo después del campo que prefieras
+        Schema::create('paymentterms', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->timestamps();
         });
     }
 
@@ -23,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('outputs', function (Blueprint $table) {
-            $table->dropColumn('client_id');
-        });
+        Schema::dropIfExists('paymentterms');
     }
 };
