@@ -31,6 +31,9 @@ class PaymentsSeeder extends Seeder
         DB::table('paymentforms')->insert([
             'name' => 'Transferencia'
         ]);
+        DB::table('paymentforms')->insert([
+            'name' => 'Crédito'
+        ]);
 
         DB::table('paymentterms')->insert([
             'name' => 'Contado'

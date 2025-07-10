@@ -28,7 +28,12 @@ class ClientResource extends Resource
                 Forms\Components\TextInput::make('code')
                     ->label('Cedula o Rif')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->unique(
+                        table: 'clients', // Nombre de la tabla en la BD
+                        column: 'code',
+                        ignoreRecord: true // Esto permite ignorar el registro actual al editar
+                    ),
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre o Razón Social')
                     ->required()

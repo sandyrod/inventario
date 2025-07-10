@@ -118,13 +118,11 @@ class OutputResource extends Resource
                             ->numeric()
                             ->required()
                             ->default(1)
-                            ->step(0.01)
+                            ->step(1)
                             ->live()
                             ->formatStateUsing(function ($state) {
                                 // Muestra enteros sin decimales y decimales con 2 dígitos
-                                return is_int($state) || $state == floor($state) 
-                                    ? number_format($state, 0)
-                                    : number_format($state, 2);
+                                return number_format(intval($state),0);
                             })
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $set('total_price', round($state * $get('unit_price'), 2));
@@ -177,13 +175,95 @@ class OutputResource extends Resource
                         'ajuste' => 'Ajuste',
                         'deterioro' => 'Deterioro',
                     }),
+                Tables\Columns\TextColumn::make('client.name')
+                    ->label('Cliente'),
+                Tables\Columns\TextColumn::make('amount')
+                    ->label('Monto'),
                 Tables\Columns\TextColumn::make('description')
                     ->limit(50),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->dateTime(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('type')
+                ->label('Tipo')
+                ->options([
+                    'compra' => 'Compra',
+                    'ajuste' => 'Ajuste',
+                    'transferencia' => 'Transferencia',
+                ]),
+                 Tables\Filters\SelectFilter::make('statuspaid')
+                ->label('Estado de Pago')
+                ->options([
+                    'pendiente' => 'Pendiente',
+                    'pagado' => 'Pagado',
+                ]),
+                Tables\Filters\MultiSelectFilter::make('client_id')
+                    ->label('Cliente')
+                    ->relationship('client', 'name')
+                    ->options(function () {
+                        return \App\Models\Client::query()
+                            ->select(['id', 'name', 'code'])
+                            ->get()
+                            ->mapWithKeys(function ($client) {
+                                return [
+                                    $client->id => "{$client->code} - {$client->name}"
+                                ];
+                            });
+                    })
+                    ->searchable()
+                    ->getSearchResultsUsing(function (string $search) {
+                        return \App\Models\Client::query()
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('code', 'like', "%{$search}%")
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(function ($client) {
+                                return [
+                                    $client->id => "{$client->code} - {$client->name}"
+                                ];
+                            });
+                    })
+                    ->preload(),
+                Tables\Filters\Filter::make('created_at')
+                ->form([
+                    Forms\Components\DatePicker::make('created_from')
+                        ->label('Desde'),
+                    Forms\Components\DatePicker::make('created_until')
+                        ->label('Hasta'),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['created_from'],
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                        )
+                        ->when(
+                            $data['created_until'],
+                            fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                        );
+                }),
+                Tables\Filters\Filter::make('amount')
+                ->form([
+                    Forms\Components\TextInput::make('min_amount')
+                        ->label('Monto mínimo')
+                        ->numeric(),
+                    Forms\Components\TextInput::make('max_amount')
+                        ->label('Monto máximo')
+                        ->numeric(),
+                ])
+                ->query(function (Builder $query, array $data): Builder {
+                    return $query
+                        ->when(
+                            $data['min_amount'],
+                            fn (Builder $query, $amount): Builder => $query->where('amount', '>=', $amount),
+                        )
+                        ->when(
+                            $data['max_amount'],
+                            fn (Builder $query, $amount): Builder => $query->where('amount', '<=', $amount),
+                        );
+                }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -192,7 +272,8 @@ class OutputResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc'); ;
     }
 
     public static function getRelations(): array

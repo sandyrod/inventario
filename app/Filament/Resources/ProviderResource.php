@@ -28,7 +28,11 @@ class ProviderResource extends Resource
                 Forms\Components\TextInput::make('code')
                     ->label('Cédula o Rif')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->unique(
+                        table: 'providers', // Nombre de la tabla en la BD
+                        column: 'code'
+                    ),
                 Forms\Components\TextInput::make('name')
                     ->label('Nombre o Razón Social')
                     ->required()
@@ -36,15 +40,12 @@ class ProviderResource extends Resource
                 Forms\Components\TextInput::make('phone')
                     ->label('Teléfono')
                     ->tel()
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\Textarea::make('address')
                     ->label('Dirección')
-                    ->required()
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('email')
                     ->label('Email')
-                    ->required()
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('web')
                     ->label('Sitio Web')
