@@ -28,6 +28,7 @@ class CreateInput extends CreateRecord
                 if ($item->product) {
                     $item->product->increment('stock', $item->quantity);
                     
+                    
                     // Log de depuración
                     logger()->debug('Stock actualizado', [
                         'product_id' => $item->product_id,

@@ -119,28 +119,113 @@ class InputResource extends Resource
                             ->default(1)
                             ->live()
                             ->formatStateUsing(function ($state) {
-                                // Siempre formatea como entero sin decimales
                                 return number_format(intval($state), 0);
                             })
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
-                                $set('total_price', round($state * $get('unit_price'), 2));
+                                $unitPrice = $get('unit_price') ?? 0;
+                                $discount = $get('discount') ?? 0;
+                                
+                                // Calcular total con descuento
+                                $totalWithDiscount = $state * $unitPrice * (1 - ($discount / 100));
+                                $set('total_price', round($totalWithDiscount, 2));
+                                
+                                // Solo calcular ganancia si no hay descuento
+                                if ($discount == 0) {
+                                    $profitPercent = $get('profit_percent') ?? 0;
+                                    $salesPrice = $totalWithDiscount * (1 + ($profitPercent / 100));
+                                    $set('sales_price', round($salesPrice, 2));
+                                }
                             }),
-                            
+
                         Forms\Components\TextInput::make('unit_price')
-                            ->label('Precio unitario')
+                            ->label('Costo unitario')
                             ->numeric()
                             ->required()
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
-                                $set('total_price', round($state * $get('quantity'), 2));
+                                $quantity = $get('quantity') ?? 1;
+                                $discount = $get('discount') ?? 0;
+                                
+                                // Calcular total con descuento
+                                $totalWithDiscount = $state * $quantity * (1 - ($discount / 100));
+                                $set('total_price', round($totalWithDiscount, 2));
+                                
+                                // Solo calcular ganancia si no hay descuento
+                                if ($discount == 0) {
+                                    $profitPercent = $get('profit_percent') ?? 0;
+                                    $salesPrice = $totalWithDiscount * (1 + ($profitPercent / 100));
+                                    $set('sales_price', round($salesPrice, 2));
+                                }
+                            }),
+
+                        Forms\Components\TextInput::make('discount')
+                            ->label('Descuento (%)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->default(0)
+                            ->suffix('%')
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
+                                $unitPrice = $get('unit_price') ?? 0;
+                                $quantity = $get('quantity') ?? 1;
+                                
+                                if ($unitPrice > 0) {
+                                    // Calcular total con descuento
+                                    $totalWithDiscount = $unitPrice * $quantity * (1 - ($state / 100));
+                                    $set('total_price', round($totalWithDiscount, 2));
+                                    
+                                    // Manejo de estados para descuento/ganancia
+                                    if ($state > 0) {
+                                        $set('profit_percent', null);
+                                        $set('sales_price', null);
+                                    } else {
+                                        // Al quitar descuento, recalcular ganancia si existe
+                                        $profitPercent = $get('profit_percent') ?? 0;
+                                        $salesPrice = $totalWithDiscount * (1 + ($profitPercent / 100));
+                                        $set('sales_price', round($salesPrice, 2));
+                                    }
+                                }
                             }),
                         Forms\Components\TextInput::make('total_price')
-                            ->label('Total')
+                            ->label('Total con descuento')
                             ->numeric()
-                            ->disabled()
                             ->dehydrated()
                             ->required()
                             ->reactive(),
+                            
+                        Forms\Components\TextInput::make('profit_percent')
+                            ->label('Margen de ganancia (%)')
+                            ->numeric()
+                            ->minValue(0)
+                            ->maxValue(1000)
+                            ->default(0)
+                            ->suffix('%')
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
+                                $totalPrice = $get('total_price') ?? 0;
+                                $discount = $get('discount') ?? 0;
+                                
+                                if ($totalPrice > 0 && $discount == 0) {
+                                    $salesPrice = $totalPrice * (1 + ($state / 100));
+                                    $set('sales_price', round($salesPrice, 2));
+                                }
+                            }),
+
+                        Forms\Components\TextInput::make('sales_price')
+                            ->label('Precio de venta con ganancia')
+                            ->numeric()
+                            ->live()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
+                                $totalPrice = $get('total_price') ?? 0;
+                                $discount = $get('discount') ?? 0;
+                                
+                                if ($totalPrice > 0 && $discount == 0) {
+                                    $profitPercent = (($state - $totalPrice) / $totalPrice) * 100;
+                                    $set('profit_percent', round($profitPercent, 2));
+                                }
+                            }),
+
                             
                     ])
                     ->defaultItems(1)
