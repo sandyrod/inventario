@@ -146,6 +146,10 @@ class InputResource extends Resource
                                 $quantity = $get('quantity') ?? 1;
                                 $discount = $get('discount') ?? 0;
                                 
+                                // Calcular precio unitario con descuento
+                                $unitPriceWithDiscount = $state * (1 - ($discount / 100));
+                                $set('unit_price_with_discount', round($unitPriceWithDiscount, 2));
+                                
                                 // Calcular total con descuento
                                 $totalWithDiscount = $state * $quantity * (1 - ($discount / 100));
                                 $set('total_price', round($totalWithDiscount, 2));
@@ -171,6 +175,10 @@ class InputResource extends Resource
                                 $quantity = $get('quantity') ?? 1;
                                 
                                 if ($unitPrice > 0) {
+                                    // Calcular precio unitario con descuento
+                                    $unitPriceWithDiscount = $unitPrice * (1 - ($state / 100));
+                                    $set('unit_price_with_discount', round($unitPriceWithDiscount, 2));
+                                    
                                     // Calcular total con descuento
                                     $totalWithDiscount = $unitPrice * $quantity * (1 - ($state / 100));
                                     $set('total_price', round($totalWithDiscount, 2));
@@ -187,6 +195,15 @@ class InputResource extends Resource
                                     }
                                 }
                             }),
+
+                        // Nuevo campo: Precio unitario con descuento
+                        Forms\Components\TextInput::make('unit_price_with_discount')
+                            ->label('Precio unitario con descuento')
+                            ->numeric()
+                            ->disabled() // Hacerlo de solo lectura
+                            ->dehydrated()
+                            ->reactive(),
+
                         Forms\Components\TextInput::make('total_price')
                             ->label('Total con descuento')
                             ->numeric()
@@ -203,11 +220,11 @@ class InputResource extends Resource
                             ->suffix('%')
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
-                                $totalPrice = $get('total_price') ?? 0;
-                                $discount = $get('discount') ?? 0;
+                                $unitPriceWithDiscount = $get('unit_price_with_discount') ?? 0;
                                 
-                                if ($totalPrice > 0 && $discount == 0) {
-                                    $salesPrice = $totalPrice * (1 + ($state / 100));
+                                if ($unitPriceWithDiscount > 0) {
+                                    // Calcular sales_price aplicando el % de ganancia al precio unitario con descuento
+                                    $salesPrice = $unitPriceWithDiscount * (1 + ($state / 100));
                                     $set('sales_price', round($salesPrice, 2));
                                 }
                             }),
@@ -217,11 +234,11 @@ class InputResource extends Resource
                             ->numeric()
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
-                                $totalPrice = $get('total_price') ?? 0;
-                                $discount = $get('discount') ?? 0;
+                                $unitPriceWithDiscount = $get('unit_price_with_discount') ?? 0;
                                 
-                                if ($totalPrice > 0 && $discount == 0) {
-                                    $profitPercent = (($state - $totalPrice) / $totalPrice) * 100;
+                                if ($unitPriceWithDiscount > 0) {
+                                    // Calcular el porcentaje de ganancia basado en el sales_price y unit_price_with_discount
+                                    $profitPercent = (($state - $unitPriceWithDiscount) / $unitPriceWithDiscount) * 100;
                                     $set('profit_percent', round($profitPercent, 2));
                                 }
                             }),
