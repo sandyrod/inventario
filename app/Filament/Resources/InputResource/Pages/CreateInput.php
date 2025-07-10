@@ -27,13 +27,26 @@ class CreateInput extends CreateRecord
             foreach ($input->items as $item) {
                 if ($item->product) {
                     $item->product->increment('stock', $item->quantity);
+                    // Actualizar cost (precio de costo con descuento)
+                    if (isset($item->unit_price_with_discount)) {
+                        $item->product->cost = $item->unit_price_with_discount;
+                    }
                     
+                    // Actualizar price (precio de venta)
+                    if (isset($item->sales_price)) {
+                        $item->product->price = $item->sales_price;
+                    }
+                    
+                    // Guardar todos los cambios del producto
+                    $item->product->save();
                     
                     // Log de depuración
-                    logger()->debug('Stock actualizado', [
+                    logger()->debug('Producto actualizado', [
                         'product_id' => $item->product_id,
-                        'cantidad' => $item->quantity,
-                        'nuevo_stock' => $item->product->stock
+                        'cantidad_agregada' => $item->quantity,
+                        'nuevo_stock' => $item->product->stock,
+                        'nuevo_costo' => $item->unit_price_with_discount ?? null,
+                        'nuevo_precio' => $item->sales_price ?? null
                     ]);
                 }
             }

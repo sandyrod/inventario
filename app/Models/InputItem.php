@@ -12,7 +12,11 @@ class InputItem extends Model
         'product_id',
         'quantity',
         'unit_price',
-        'notes'
+        'notes',
+        'discount',
+        'unit_price_with_discount',
+        'profit_percent',
+        'sales_price'
     ];
 
     public function input()
