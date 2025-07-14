@@ -107,8 +107,8 @@ class InputResource extends Resource
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 $product = \App\Models\Product::find($state);
                                 if ($product) {
-                                    $set('unit_price', $product->price);
-                                    $set('total_price', round(1 * $product->price, 2));
+                                    $set('unit_price', $product->cost);
+                                    $set('total_price', round(1 * $product->cost, 2));
                                 }
                             }),
                             
