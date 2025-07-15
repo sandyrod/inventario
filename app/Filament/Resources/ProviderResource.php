@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\HtmlString;
 
 class ProviderResource extends Resource
 {
@@ -22,36 +23,70 @@ class ProviderResource extends Resource
     protected static ?string $pluralModelLabel = 'Proveedores'; // Plural
 
     public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('code')
-                    ->label('Cédula o Rif')
-                    ->required()
-                    ->maxLength(255)
-                    ->unique(
-                        table: 'providers', // Nombre de la tabla en la BD
-                        column: 'code'
-                    ),
-                Forms\Components\TextInput::make('name')
-                    ->label('Nombre o Razón Social')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('phone')
-                    ->label('Teléfono')
-                    ->tel()
-                    ->maxLength(255),
-                Forms\Components\Textarea::make('address')
-                    ->label('Dirección')
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('email')
-                    ->label('Email')
-                    ->columnSpanFull(),
-                Forms\Components\Textarea::make('web')
-                    ->label('Sitio Web')
-                    ->columnSpanFull(),
-            ]);
-    }
+{
+    return $form
+        ->schema([
+            Forms\Components\TextInput::make('code')
+                ->label('Cédula o Rif')
+                ->required()
+                ->maxLength(255)
+                ->unique(
+                    table: 'providers',
+                    column: 'code',
+                    ignoreRecord: true
+                )
+                ->live(debounce: 500)
+                ->afterStateUpdated(function ($state, $set, $get) {
+                    if (strlen($state) < 6) {
+                        $set('code_validation_color', 'border-yellow-500');
+                        $set('code_validation_message', 'Ingrese al menos 6 caracteres');
+                        return;
+                    }
+
+                    $exists = \App\Models\Provider::where('code', $state)
+                        ->when($get('id'), fn($query, $id) => $query->where('id', '!=', $id))
+                        ->exists();
+                        
+                    $set('code_validation_color', $exists ? 'border-red-500' : 'border-green-500');
+                    $set('code_validation_message', $exists ? 'Este código ya existe' : 'Código válido');
+                })
+                ->extraInputAttributes(fn ($get) => [
+                    'class' => $get('code_validation_color') ?? 'border-gray-300'
+                ])
+                ->suffix(fn ($get) => 
+                    strlen($get('code_validation_message') ?? '') > 0
+                        ? new HtmlString('<span class="text-xs text-gray-500">'.$get('code_validation_message').'</span>')
+                        : null
+                ),
+                
+            // Agrega estos campos ocultos al esquema
+            Forms\Components\Hidden::make('code_validation_color'),
+            Forms\Components\Hidden::make('code_validation_message'),
+            Forms\Components\TextInput::make('name')
+                ->label('Nombre o Razón Social')
+                ->required()
+                ->maxLength(255),
+                
+            Forms\Components\TextInput::make('phone')
+                ->label('Teléfono')
+                ->tel()
+                ->maxLength(255),
+                
+            Forms\Components\Textarea::make('address')
+                ->label('Dirección')
+                ->columnSpanFull(),
+                
+            Forms\Components\TextInput::make('email')  // Cambiado de Textarea a TextInput para email
+                ->label('Email')
+                ->email()
+                ->columnSpanFull(),
+                
+            Forms\Components\TextInput::make('web')
+                ->label('Sitio Web')
+                ->url()
+                ->columnSpanFull(),
+        ]);
+}
 
     public static function table(Table $table): Table
     {
