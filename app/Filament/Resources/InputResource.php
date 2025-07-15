@@ -142,22 +142,26 @@ class InputResource extends Resource
                             ->numeric()
                             ->required()
                             ->default(1)
-                            ->live()
+                            ->live(debounce: 500)
                             ->formatStateUsing(function ($state) {
                                 return number_format(intval($state), 0);
                             })
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPrice = $get('unit_price') ?? 0;
                                 $discount = $get('discount') ?? 0;
+                                $profitPercent = $get('profit_percent') ?? 0;
                                 
                                 // Calcular total con descuento
                                 $totalWithDiscount = $state * $unitPrice * (1 - ($discount / 100));
                                 $set('total_price', round($totalWithDiscount, 2));
                                 
-                                // Solo calcular ganancia si no hay descuento
-                                if ($discount == 0) {
-                                    $profitPercent = $get('profit_percent') ?? 0;
-                                    $salesPrice = $totalWithDiscount * (1 + ($profitPercent / 100));
+                                // Calcular unit_price_with_discount
+                                $unitPriceWithDiscount = $unitPrice * (1 - ($discount / 100));
+                                $set('unit_price_with_discount', round($unitPriceWithDiscount, 2));
+                                
+                                // Calcular sales_price automáticamente si hay profit_percent
+                                if ($unitPriceWithDiscount > 0 && $profitPercent !== null) {
+                                    $salesPrice = $unitPriceWithDiscount * (1 + ($profitPercent / 100));
                                     $set('sales_price', round($salesPrice, 2));
                                 }
                             }),
@@ -170,6 +174,7 @@ class InputResource extends Resource
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $quantity = $get('quantity') ?? 1;
                                 $discount = $get('discount') ?? 0;
+                                $profitPercent = $get('profit_percent') ?? 0;
                                 
                                 // Calcular precio unitario con descuento
                                 $unitPriceWithDiscount = $state * (1 - ($discount / 100));
@@ -179,10 +184,9 @@ class InputResource extends Resource
                                 $totalWithDiscount = $state * $quantity * (1 - ($discount / 100));
                                 $set('total_price', round($totalWithDiscount, 2));
                                 
-                                // Solo calcular ganancia si no hay descuento
-                                if ($discount == 0) {
-                                    $profitPercent = $get('profit_percent') ?? 0;
-                                    $salesPrice = $totalWithDiscount * (1 + ($profitPercent / 100));
+                                // Calcular sales_price automáticamente si hay profit_percent
+                                if ($unitPriceWithDiscount > 0 && $profitPercent !== null) {
+                                    $salesPrice = $unitPriceWithDiscount * (1 + ($profitPercent / 100));
                                     $set('sales_price', round($salesPrice, 2));
                                 }
                             }),
@@ -194,10 +198,11 @@ class InputResource extends Resource
                             ->maxValue(100)
                             ->default(fn ($get) => $get('../../alldiscount') ?? 0)
                             ->suffix('%')
-                            ->live(debounce: 500)
+                            ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPrice = $get('unit_price') ?? 0;
                                 $quantity = $get('quantity') ?? 1;
+                                $profitPercent = $get('profit_percent') ?? 0;
                                 
                                 if ($unitPrice > 0) {
                                     // Calcular precio unitario con descuento
@@ -208,14 +213,9 @@ class InputResource extends Resource
                                     $totalWithDiscount = $unitPrice * $quantity * (1 - ($state / 100));
                                     $set('total_price', round($totalWithDiscount, 2));
                                     
-                                    // Manejo de estados para descuento/ganancia
-                                    if ($state > 0) {
-                                        $set('profit_percent', null);
-                                        $set('sales_price', null);
-                                    } else {
-                                        // Al quitar descuento, recalcular ganancia si existe
-                                        $profitPercent = $get('profit_percent') ?? 0;
-                                        $salesPrice = $totalWithDiscount * (1 + ($profitPercent / 100));
+                                    // Calcular sales_price automáticamente si hay profit_percent
+                                    if ($unitPriceWithDiscount > 0 && $profitPercent !== null) {
+                                        $salesPrice = $unitPriceWithDiscount * (1 + ($profitPercent / 100));
                                         $set('sales_price', round($salesPrice, 2));
                                     }
                                 }
