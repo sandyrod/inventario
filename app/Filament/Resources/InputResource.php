@@ -107,7 +107,7 @@ class InputResource extends Resource
                             ->afterStateUpdated(function ($state, Forms\Set $set) {
                                 $product = \App\Models\Product::find($state);
                                 if ($product) {
-                                    $set('unit_price', $product->cost);
+                                    $set('unit_price', round($product->cost, 2));
                                     $set('total_price', round(1 * $product->cost, 2));
                                 }
                             }),
@@ -142,6 +142,7 @@ class InputResource extends Resource
                             ->numeric()
                             ->required()
                             ->live()
+                            ->bounce(500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $quantity = $get('quantity') ?? 1;
                                 $discount = $get('discount') ?? 0;

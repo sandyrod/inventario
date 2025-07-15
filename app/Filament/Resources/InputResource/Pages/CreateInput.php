@@ -17,7 +17,14 @@ class CreateInput extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        // Preprocesar datos si es necesario
+        // Si existen items, aseguramos que unit_price_with_discount nunca sea null
+        if (isset($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $k => $item) {
+                if (!isset($item['unit_price_with_discount']) || is_null($item['unit_price_with_discount'])) {
+                    $data['items'][$k]['unit_price_with_discount'] = 0;
+                }
+            }
+        }
         return $data;
     }
 
