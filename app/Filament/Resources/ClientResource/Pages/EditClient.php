@@ -8,6 +8,10 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditClient extends EditRecord
 {
+    protected function getRedirectUrl(): string
+    {
+        return ClientResource::getUrl('index');
+    }
     protected static string $resource = ClientResource::class;
 
     protected function getHeaderActions(): array

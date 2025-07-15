@@ -108,6 +108,10 @@ class ClientResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Estás seguro de que deseas borrar este registro?')
+                    ->modalDescription('Esta acción enviará el registro a la papelera (soft delete) y podrá ser recuperado desde la base de datos.'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\Action;
@@ -90,14 +91,14 @@ class ProductResource extends Resource
                     ->preload(),
                 Forms\Components\TextInput::make('cost')
                     ->label('Costo USD')
-                    ->required()
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix('$')
+                    ->default(0),
                 Forms\Components\TextInput::make('price')
                     ->label('Precio')
-                    ->required()
                     ->numeric()
-                    ->prefix('$'),
+                    ->prefix('$')
+                    ->default(0),
                 Forms\Components\TextInput::make('stock')
                     ->label('Stock')
                     ->required()
@@ -244,6 +245,10 @@ class ProductResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->requiresConfirmation()
+                    ->modalHeading('¿Estás seguro de que deseas borrar este registro?')
+                    ->modalDescription('Esta acción enviará el registro a la papelera (soft delete) y podrá ser recuperado desde la base de datos.'),
                 // Tables\Actions\Action::make('import')
                 // ->label('Importar')
                 // ->url(fn () => static::getUrl('import'))

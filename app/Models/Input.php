@@ -4,8 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Input extends Model
 {
+    use SoftDeletes;
     protected $fillable = ['user_id','amount','type','description','dateinput','datepaid','statuspaid'];
 
     public function items()

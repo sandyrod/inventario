@@ -8,6 +8,10 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditUnit extends EditRecord
 {
+    protected function getRedirectUrl(): string
+    {
+        return UnitResource::getUrl('index');
+    }
     protected static string $resource = UnitResource::class;
 
     protected function getHeaderActions(): array
