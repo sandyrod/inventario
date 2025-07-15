@@ -142,7 +142,6 @@ class InputResource extends Resource
                             ->numeric()
                             ->required()
                             ->live()
-                            ->bounce(500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $quantity = $get('quantity') ?? 1;
                                 $discount = $get('discount') ?? 0;
