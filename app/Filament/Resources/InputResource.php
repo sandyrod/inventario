@@ -192,7 +192,7 @@ class InputResource extends Resource
                             ->numeric()
                             ->minValue(0)
                             ->maxValue(100)
-                            ->default(0)
+                            ->default(fn ($get) => $get('../../alldiscount') ?? 0)
                             ->suffix('%')
                             ->live(debounce: 500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
