@@ -83,7 +83,6 @@ class ProviderResource extends Resource
                 
             Forms\Components\TextInput::make('web')
                 ->label('Sitio Web')
-                ->url()
                 ->columnSpanFull(),
         ]);
 }

@@ -15,6 +15,7 @@ use Filament\Tables\Filters\Filter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\HtmlString;
 
 class ProductResource extends Resource
 {
@@ -29,9 +30,38 @@ class ProductResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('productcode')
-                    ->label('Código')
-                    ->required()
-                    ->maxLength(255),
+    ->label('Código')
+    ->required()
+    ->maxLength(255)
+    ->unique(
+        table: 'products',
+        column: 'productcode',
+        ignoreRecord: true
+    )
+    ->live(debounce: 500)
+    ->afterStateUpdated(function ($state, $set, $get) {
+        if (strlen($state) < 3) {
+            $set('productcode_validation_color', 'border-yellow-500');
+            $set('productcode_validation_message', 'Ingrese al menos 3 caracteres');
+            return;
+        }
+        $exists = \App\Models\Product::where('productcode', $state)
+            ->when($get('id'), fn($query, $id) => $query->where('id', '!=', $id))
+            ->exists();
+        $set('productcode_validation_color', $exists ? 'border-red-500' : 'border-green-500');
+        $set('productcode_validation_message', $exists ? 'Este código ya existe' : 'Código válido');
+    })
+    ->extraInputAttributes(fn ($get) => [
+        'class' => $get('productcode_validation_color') ?? 'border-gray-300'
+    ])
+    ->suffix(fn ($get) => 
+        strlen($get('productcode_validation_message') ?? '') > 0
+            ? new HtmlString('<span class="text-xs text-gray-500">'.$get('productcode_validation_message').'</span>')
+            : null
+    ),
+    // Campos ocultos para feedback visual
+    Forms\Components\Hidden::make('productcode_validation_color'),
+    Forms\Components\Hidden::make('productcode_validation_message'),
                 Forms\Components\TextInput::make('reference')
                     ->label('Referencia')
                     ->required()

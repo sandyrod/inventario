@@ -9,6 +9,10 @@ use Illuminate\Support\Facades\DB;
 
 class CreateOutput extends CreateRecord
 {
+    protected function getRedirectUrl(): string
+    {
+        return OutputResource::getUrl('index');
+    }
     protected static string $resource = OutputResource::class;
 
     protected function mutateFormDataBeforeCreate(array $data): array

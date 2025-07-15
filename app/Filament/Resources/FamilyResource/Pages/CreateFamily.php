@@ -8,5 +8,9 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateFamily extends CreateRecord
 {
+    protected function getRedirectUrl(): string
+    {
+        return FamilyResource::getUrl('index');
+    }
     protected static string $resource = FamilyResource::class;
 }
