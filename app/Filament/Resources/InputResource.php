@@ -198,7 +198,7 @@ class InputResource extends Resource
 
                         // Nuevo campo: Precio unitario con descuento
                         Forms\Components\TextInput::make('unit_price_with_discount')
-                            ->label('Precio unitario con descuento')
+                            ->label('Costo unitario con descuento')
                             ->numeric()
                             ->disabled() // Hacerlo de solo lectura
                             ->dehydrated()
