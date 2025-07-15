@@ -80,6 +80,31 @@ class InputResource extends Resource
                             ->required()
                             ->reactive(),
                     
+                // Campo opcional para descuento global
+                Forms\Components\TextInput::make('alldiscount')
+                    ->label('Descuento global (%)')
+                    ->numeric()
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->default(null)
+                    ->suffix('%')
+                    ->reactive()
+                    ->live(debounce: 500)
+                    ->afterStateUpdated(function ($state, $set, $get, $old) {
+                        // Solo actualiza los discounts que estén vacíos, en cero, o coincidan con el valor anterior de alldiscount
+                        $items = $get('items') ?? [];
+                        foreach ($items as $index => $item) {
+                            $discount = $item['discount'] ?? null;
+                            if (
+                                $discount === null || $discount === '' || $discount == 0 ||
+                                ($old !== null && $old !== '' && $discount == $old)
+                            ) {
+                                $items[$index]['discount'] = $state;
+                            }
+                        }
+                        $set('items', $items);
+                    }),
+
                 Forms\Components\Repeater::make('items')
                     ->relationship()
                     ->schema([
@@ -141,7 +166,7 @@ class InputResource extends Resource
                             ->label('Costo unitario')
                             ->numeric()
                             ->required()
-                            ->live()
+                            ->live(debounce: 500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $quantity = $get('quantity') ?? 1;
                                 $discount = $get('discount') ?? 0;
@@ -169,7 +194,7 @@ class InputResource extends Resource
                             ->maxValue(100)
                             ->default(0)
                             ->suffix('%')
-                            ->live()
+                            ->live(debounce: 500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPrice = $get('unit_price') ?? 0;
                                 $quantity = $get('quantity') ?? 1;
@@ -218,7 +243,7 @@ class InputResource extends Resource
                             ->maxValue(1000)
                             ->default(0)
                             ->suffix('%')
-                            ->live()
+                            ->live(debounce: 500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPriceWithDiscount = $get('unit_price_with_discount') ?? 0;
                                 
@@ -232,7 +257,7 @@ class InputResource extends Resource
                         Forms\Components\TextInput::make('sales_price')
                             ->label('Precio de venta con ganancia')
                             ->numeric()
-                            ->live()
+                            ->live(debounce: 500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPriceWithDiscount = $get('unit_price_with_discount') ?? 0;
                                 
