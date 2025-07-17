@@ -39,7 +39,7 @@ class ProductResource extends Resource
         column: 'productcode',
         ignoreRecord: true
     )
-    ->live(debounce: 500)
+    ->live(debounce: 1500)
     ->afterStateUpdated(function ($state, $set, $get) {
         if (strlen($state) < 3) {
             $set('productcode_validation_color', 'border-yellow-500');

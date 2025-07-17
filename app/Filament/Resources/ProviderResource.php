@@ -35,7 +35,7 @@ class ProviderResource extends Resource
                     column: 'code',
                     ignoreRecord: true
                 )
-                ->live(debounce: 500)
+                ->live(debounce: 1500)
                 ->afterStateUpdated(function ($state, $set, $get) {
                     if (strlen($state) < 6) {
                         $set('code_validation_color', 'border-yellow-500');

@@ -89,7 +89,7 @@ class InputResource extends Resource
                     ->default(null)
                     ->suffix('%')
                     ->reactive()
-                    ->live(debounce: 500)
+                    ->live(debounce: 1500)
                     ->afterStateUpdated(function ($state, $set, $get, $old) {
                         // Solo actualiza los discounts que estén vacíos, en cero, o coincidan con el valor anterior de alldiscount
                         $items = $get('items') ?? [];
@@ -142,7 +142,7 @@ class InputResource extends Resource
                             ->numeric()
                             ->required()
                             ->default(1)
-                            ->live(debounce: 500)
+                            ->live(debounce: 1500)
                             ->formatStateUsing(function ($state) {
                                 return number_format(intval($state), 0);
                             })
@@ -170,7 +170,7 @@ class InputResource extends Resource
                             ->label('Costo unitario')
                             ->numeric()
                             ->required()
-                            ->live(debounce: 500)
+                            ->live(debounce: 1500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $quantity = $get('quantity') ?? 1;
                                 $discount = $get('discount') ?? 0;
@@ -243,7 +243,7 @@ class InputResource extends Resource
                             ->maxValue(1000)
                             ->default(0)
                             ->suffix('%')
-                            ->live(debounce: 500)
+                            ->live(debounce: 1500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPriceWithDiscount = $get('unit_price_with_discount') ?? 0;
                                 
@@ -257,7 +257,7 @@ class InputResource extends Resource
                         Forms\Components\TextInput::make('sales_price')
                             ->label('Precio de venta con ganancia')
                             ->numeric()
-                            ->live(debounce: 500)
+                            ->live(debounce: 1500)
                             ->afterStateUpdated(function (Forms\Set $set, $state, $get) {
                                 $unitPriceWithDiscount = $get('unit_price_with_discount') ?? 0;
                                 
