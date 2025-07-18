@@ -29,8 +29,12 @@
 @if(isset($productos) && count($productos))
     @foreach($productos as $producto)
         <div class="etiqueta">
-            <div class="nombre">{{ $producto['nombre'] }}</div>
-            <div class="precio">{{ $producto['precio_fecha'] }}</div>
+            <div class="nombre">
+                {{ is_array($producto) && isset($producto['nombre']) ? $producto['nombre'] : $producto }}
+            </div>
+            <div class="precio">
+                {{ is_array($producto) && isset($producto['precio_fecha']) ? $producto['precio_fecha'] : '' }}
+            </div>
         </div>
     @endforeach
 @endif

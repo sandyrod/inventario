@@ -413,12 +413,16 @@ $productos = $record->items->map(function ($item) use ($fecha) {
 });
 
                     $pdf = app('dompdf.wrapper');
-                    $pdf->loadHTML(
-                        view('pdf.etiquetas', [
-                            'productos' => $productos,
-                            'record' => $record
-                        ])
-                    );
+// 5.70 x 1.70 cm en puntos (1 cm = 28.3465 puntos)
+$ancho = 5.70 * 28.3465; // 161.57505 puntos
+$alto = 1.70 * 28.3465;  // 48.18905 puntos
+$pdf->loadHTML(
+    view('pdf.etiquetas', [
+        'productos' => $productos,
+        'record' => $record
+    ])
+);
+//$pdf->setPaper([$ancho, $alto], 'landscape');
                 
                     // Opción 1: Usando streamDownload (recomendado para archivos PDF)
                     return response()->streamDownload(
