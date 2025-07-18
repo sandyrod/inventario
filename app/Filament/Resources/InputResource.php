@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Http\Response;
 
 class InputResource extends Resource
 {
@@ -394,6 +395,43 @@ class InputResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('etiquetar')
+                ->label('Etiquetar')
+                ->icon('heroicon-o-tag')
+                ->color('info')
+                ->action(function ($record) {
+                    if (!$record->relationLoaded('items')) {
+                        $record->load('items.product');
+                    }
+                
+                    $fecha = $record->created_at ? $record->created_at->format('Ymd') : now()->format('Ymd');
+$productos = $record->items->map(function ($item) use ($fecha) {
+    return [
+        'nombre' => $item->product->description ?? '',
+        'precio_fecha' => number_format($item->sales_price ?? 0, 2, '.', '') . $fecha,
+    ];
+});
+
+                    $pdf = app('dompdf.wrapper');
+                    $pdf->loadHTML(
+                        view('pdf.etiquetas', [
+                            'productos' => $productos,
+                            'record' => $record
+                        ])
+                    );
+                
+                    // Opción 1: Usando streamDownload (recomendado para archivos PDF)
+                    return response()->streamDownload(
+                        function () use ($pdf) {
+                            echo $pdf->output();
+                        },
+                        "etiquetas_entrada_{$record->id}.pdf"
+                    );
+                    
+                    // O Opción 2: Alternativa más directa
+                    // return $pdf->download("etiquetas_entrada_{$record->id}.pdf");
+                })
+                ->visible(fn ($record) => $record->items()->exists())
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
