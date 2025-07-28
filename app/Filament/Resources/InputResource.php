@@ -424,6 +424,7 @@ $productos = $record->items->map(function ($item) use ($fecha) {
                             'nombre' => $item->product->description ?? '',
                             'codigo' => $item->product->productcode ?? '',
                             'codigo_barras' => $codigoBarras,
+                            'precio' => $item->sales_price ?? 0,
                             'precio_fecha' => number_format($item->sales_price ?? 0, 2, '.', '') . $fecha,
                         ];
                     }
