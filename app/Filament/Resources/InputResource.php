@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Http\Response;
+use App\Helpers\BarcodeGenerator;
 
 class InputResource extends Resource
 {
@@ -412,28 +413,44 @@ $productos = $record->items->map(function ($item) use ($fecha) {
     ];
 });
 
+                    // Crear instancia del generador de códigos de barras
+                    $barcodeGenerator = new BarcodeGenerator();
+                    
+                    // Generar códigos de barras para cada producto
+                    $productosConCodigo = [];
+                    foreach ($record->items as $item) {
+                        $codigoBarras = base64_encode($barcodeGenerator->generate($item->product->productcode ?? ''));
+                        $productosConCodigo[] = [
+                            'nombre' => $item->product->description ?? '',
+                            'codigo' => $item->product->productcode ?? '',
+                            'codigo_barras' => $codigoBarras,
+                            'precio_fecha' => number_format($item->sales_price ?? 0, 2, '.', '') . $fecha,
+                        ];
+                    }
+                    
                     $pdf = app('dompdf.wrapper');
-// 5.70 x 1.70 cm en puntos (1 cm = 28.3465 puntos)
-$ancho = 5.70 * 28.3465; // 161.57505 puntos
-$alto = 1.70 * 28.3465;  // 48.18905 puntos
-$pdf->loadHTML(
-    view('pdf.etiquetas', [
-        'productos' => $productos,
-        'record' => $record
-    ])
-);
-//$pdf->setPaper([$ancho, $alto], 'landscape');
+                    // 5.70 x 1.70 cm en puntos (1 cm = 28.3465 puntos)
+                    $ancho = 5.70 * 28.3465; // 161.57505 puntos
+                    $alto = 1.70 * 28.3465;  // 48.18905 puntos
+                    
+                    $pdf->loadHTML(
+                        view('pdf.etiquetas', [
+                            'productos' => $productosConCodigo,
+                            'record' => $record,
+                            'ancho_pt' => $ancho,
+                            'alto_pt' => $alto
+                        ])
+                    );
+                    
+                    $pdf->setPaper([0, 0, $ancho, $alto], 'portrait');
                 
-                    // Opción 1: Usando streamDownload (recomendado para archivos PDF)
+                    // Usando streamDownload para el PDF
                     return response()->streamDownload(
                         function () use ($pdf) {
                             echo $pdf->output();
                         },
                         "etiquetas_entrada_{$record->id}.pdf"
                     );
-                    
-                    // O Opción 2: Alternativa más directa
-                    // return $pdf->download("etiquetas_entrada_{$record->id}.pdf");
                 })
                 ->visible(fn ($record) => $record->items()->exists())
             ])
