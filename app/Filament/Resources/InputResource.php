@@ -396,6 +396,24 @@ class InputResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('ver')
+                    ->label('Ver')
+                    ->icon('heroicon-o-eye')
+                    ->color('success')
+                    ->modalHeading(fn ($record) => 'Detalles de Entrada #' . $record->id)
+                    ->modalSubmitActionLabel('Cerrar')
+                    ->modalCancelAction(false)
+                    ->modalContent(function ($record) {
+                        if (!$record->relationLoaded('items')) {
+                            $record->load(['items.product', 'provider', 'user']);
+                        }
+                        
+                        return view('filament.pages.inputs.view', [
+                            'record' => $record,
+                            'items' => $record->items
+                        ]);
+                    })
+                    ->modalWidth('4xl'),
                 Tables\Actions\Action::make('etiquetar')
                 ->label('Etiquetar')
                 ->icon('heroicon-o-tag')
