@@ -424,12 +424,12 @@ class InputResource extends Resource
                     }
                 
                     $fecha = $record->created_at ? $record->created_at->format('Ymd') : now()->format('Ymd');
-$productos = $record->items->map(function ($item) use ($fecha) {
-    return [
-        'nombre' => $item->product->description ?? '',
-        'precio_fecha' => number_format($item->sales_price ?? 0, 2, '.', '') . $fecha,
-    ];
-});
+                    $productos = $record->items->map(function ($item) use ($fecha) {
+                        return [
+                            'nombre' => $item->product->description ?? '',
+                            'precio_fecha' => number_format($item->sales_price ?? 0, 2, '.', '') . $fecha,
+                        ];
+                    });
 
                     // Crear instancia del generador de códigos de barras
                     $barcodeGenerator = new BarcodeGenerator();
